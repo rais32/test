@@ -17,7 +17,8 @@ class CreateTableUserApp extends Migration
             $table->increments('id');
             $table->string('name');
             $table->string('phone_number');
-            $table->integer('score');
+            $table->integer('barbie_score');
+            $table->integer('hotwheel_score');
             $table->string('id_phone');
             $table->timestamps();
         });

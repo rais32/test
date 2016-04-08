@@ -8,4 +8,5 @@ class UserAppModel extends Model
 {
     //
     protected $table = 'users_app';
+    protected $timestamps = true;
 }
