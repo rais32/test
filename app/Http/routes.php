@@ -14,7 +14,7 @@
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::get('/test','ApiController@coba');
 Route::post('/api/add_user','ApiController@addUser');
 Route::put('/api/add_phone_number','ApiController@insertPhoneNumber');
 Route::get('/api/get_token','ApiController@getToken');

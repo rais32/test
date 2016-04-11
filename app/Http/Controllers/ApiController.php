@@ -22,7 +22,7 @@ class ApiController extends Controller
         if(count($dataUser)  == 0 ){
             $rules = array(
                             'username' => 'required|alpha_num',
-                            'id_phone' => 'required|numeric'
+                            'id_phone' => 'required'
                         );
 
             $messages = [
@@ -117,14 +117,17 @@ class ApiController extends Controller
         if(!$validator->fails()){  
             $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
             if(count($dataUser)  > 0 ){
-                $dataUpdate = array(
+                /*$dataUpdate = array(
                                 "barbie_score" => $request->input('score'),
                                 "updated_at" => date('Y-m-d G:i:s')
                             );
               
                 DB::table('users_app')
                 ->where('name', $request->input('username'))
-                ->update($dataUpdate);
+                ->update($dataUpdate);*/
+
+                UserAppModel::update_score_barbie($request->input('username'), $request->input('score'));
+                
             }
             else{
                 $dataJson["error_messages"][] = "Username tidak terdaftar";
@@ -159,14 +162,15 @@ class ApiController extends Controller
         if(!$validator->fails()){  
             $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
             if(count($dataUser)  > 0 ){
-                $dataUpdate = array(
+                /*$dataUpdate = array(
                                 "hotwheel_score" => $request->input('score'),
                                 "updated_at" => date('Y-m-d G:i:s')
                             );
               
                 DB::table('users_app')
                 ->where('name', $request->input('username'))
-                ->update($dataUpdate);
+                ->update($dataUpdate);*/
+                UserAppModel::update_score_hotwheel($request->input('username'), $request->input('score'));
             }
             else{
                 $dataJson["error_messages"][] = "Username tidak terdaftar";
@@ -176,10 +180,13 @@ class ApiController extends Controller
         else{
             $dataJson["error_messages"] = $validator->messages();
             $dataJson["status"] = "Failed";
-        }   
-         
+        }
         
         return response()->json($dataJson);
+    }
+
+    public function getCouponWinner(){
+        
     }
     public function getToken(){
         $dataJson["token"] = csrf_token();
@@ -217,6 +224,10 @@ class ApiController extends Controller
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    public function coba(){
+        return UserAppModel::coba();
     }
     private function tryCatch(){
         /*try{

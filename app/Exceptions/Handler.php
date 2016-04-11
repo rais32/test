@@ -44,11 +44,8 @@ class Handler extends ExceptionHandler
      * @return \Illuminate\Http\Response
      */
     public function render($request, Exception $e)
-    {
-        //return parent::render($request, $e);
+    {        
         // If the request wants JSON (AJAX doesn't always want JSON)
-
-        //die(var_dump($request));
         if ($request->isJson() || $request->ajax())
         {
             // Define the response
@@ -63,8 +60,8 @@ class Handler extends ExceptionHandler
                 // Add the exception class name, message and stack trace to response
 
                 $response['exception'] = get_class($e); // Reflection might be better here
-                /*$response['message'] = $e->getMessage();
-                $response['trace'] = $e->getTrace();*/
+                $response['message'] = $e->getMessage();
+                $response['trace'] = $e->getTrace();
             }
 
             // Default response of 400
@@ -82,6 +79,5 @@ class Handler extends ExceptionHandler
         }
         
         return parent::render($request, $e);
-
     }
 }
