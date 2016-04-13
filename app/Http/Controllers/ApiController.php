@@ -93,8 +93,7 @@ class ApiController extends Controller
         else{
             $dataJson["error_messages"] = $validator->messages();
             $dataJson["status"] = "Failed";
-        }   
-         
+        }
         
         return response()->json($dataJson);
     }
@@ -110,22 +109,24 @@ class ApiController extends Controller
                     );
 
         $messages = [
-            'required'  => 'Input :attribute harus diisi',
-            'score'   => 'Input :attribute harus berupa angka',
-        ];
+                    'required'  => 'Input :attribute harus diisi',
+                    'score'     => 'Input :attribute harus berupa angka'
+                    ];
         $validator = Validator::make($request->all(), $rules, $messages); 
         
         if(!$validator->fails()){  
             $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
             if(count($dataUser)  > 0 ){
-                /*$dataUpdate = array(
+                /*
+                $dataUpdate = array(
                                 "barbie_score" => $request->input('score'),
                                 "updated_at" => date('Y-m-d G:i:s')
                             );
               
                 DB::table('users_app')
                 ->where('name', $request->input('username'))
-                ->update($dataUpdate);*/
+                ->update($dataUpdate);
+                */
 
                 UserAppModel::update_score_barbie($request->input('username'), $request->input('score'));
                 
@@ -138,8 +139,7 @@ class ApiController extends Controller
         else{
             $dataJson["error_messages"] = $validator->messages();
             $dataJson["status"] = "Failed";
-        }   
-         
+        }         
         
         return response()->json($dataJson);
     }
@@ -291,6 +291,121 @@ class ApiController extends Controller
         }
 
     }
+
+    public function getLeaderBoardHotwheel(Request $request){
+        
+        $dataJson["status_code"]     = 200;
+        $dataJson["status"]          = "Success";
+        //
+        $rules = array(
+                        'username' => 'required'
+                    );
+
+        $messages = array('required'  => 'Input :attribute harus diisi');
+        $validator = Validator::make($request->all(), $rules, $messages); 
+        
+        if(!$validator->fails()){
+            $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
+
+            if(count($dataUser) > 0){
+                $sql = "SELECT number, name, score FROM (
+                            (SELECT @s:=@s+1 AS number, name, barbie_score AS score, id FROM users_app ,(SELECT @s:= 0) AS s ORDER BY hotwheel_score DESC LIMIT 10)
+                            UNION
+                            (SELECT
+                                (
+                                    SELECT COUNT(id) FROM users_app 
+                                    WHERE barbie_score >= (
+                                        SELECT barbie_score FROM users_app WHERE name = ?
+                                    )
+
+                                )AS number, name, barbie_score, id FROM users_app WHERE name = ?)
+                        ) a GROUP BY id ORDER BY number";
+
+                $dataLeaderBoard = DB::select(DB::raw($sql), 
+                                        array($request->input('username'), $request->input('username'))
+                                    );
+
+                if(count($dataLeaderBoard) > 0){
+                    $dataJson["leader_board"] = $dataLeaderBoard;
+                }
+                else{
+                    $dataJson["error_messages"] = "Tidak ada data";
+                    $dataJson["status"] = "Failed";
+                    $dataJson["coupon_number"] = "FALSE";
+                }
+            }
+            else{
+                $dataJson["error_messages"] = "Username tidak terdaftar";
+                $dataJson["status"] = "Failed";
+                $dataJson["coupon_number"] = "FALSE";
+            }
+        }
+        else{
+            $dataJson["error_messages"] = $validator->messages();
+            $dataJson["status"] = "Failed";
+            $dataJson["coupon_number"] = "FALSE";
+        }
+
+        return response()->json($dataJson);
+    }
+
+    public function getLeaderBoardBarbie(Request $request){
+        
+        $dataJson["status_code"]     = 200;
+        $dataJson["status"]          = "Success";
+        //
+        $rules = array(
+                        'username' => 'required'
+                    );
+
+        $messages = array('required'  => 'Input :attribute harus diisi');
+        $validator = Validator::make($request->all(), $rules, $messages); 
+        
+        if(!$validator->fails()){
+            $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
+
+            if(count($dataUser) > 0){
+                $sql = "SELECT number, name, score FROM (
+                            (SELECT @s:=@s+1 AS number, name, hotwheel_score AS score, id FROM users_app ,(SELECT @s:= 0) AS s ORDER BY hotwheel_score DESC LIMIT 10)
+                            UNION
+                            (SELECT
+                                (
+                                    SELECT COUNT(id) FROM users_app 
+                                    WHERE hotwheel_score >= (
+                                        SELECT hotwheel_score FROM users_app WHERE name = ?
+                                    )
+
+                                )AS number, name, hotwheel_score, id FROM users_app WHERE name = ?)
+                        ) a GROUP BY id ORDER BY number";
+
+                $dataLeaderBoard = DB::select(DB::raw($sql), 
+                                        array($request->input('username'), $request->input('username'))
+                                    );
+
+                if(count($dataLeaderBoard) > 0){
+                    $dataJson["leader_board"] = $dataLeaderBoard;
+                }
+                else{
+                    $dataJson["error_messages"] = "Tidak ada data";
+                    $dataJson["status"] = "Failed";
+                    $dataJson["coupon_number"] = "FALSE";
+                }
+            }
+            else{
+                $dataJson["error_messages"] = "Username tidak terdaftar";
+                $dataJson["status"] = "Failed";
+                $dataJson["coupon_number"] = "FALSE";
+            }
+        }
+        else{
+            $dataJson["error_messages"] = $validator->messages();
+            $dataJson["status"] = "Failed";
+            $dataJson["coupon_number"] = "FALSE";
+        }
+
+        return response()->json($dataJson);
+    }
+
 
     private function generateRandomString($length, $type) {
         if($type == '1'){
