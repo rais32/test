@@ -308,18 +308,18 @@ class ApiController extends Controller
 
             if(count($dataUser) > 0){
                 $sql = "SELECT number, name, score FROM (
-                            (SELECT @s:=@s+1 AS number, name, barbie_score AS score, id FROM users_app ,(SELECT @s:= 0) AS s ORDER BY hotwheel_score DESC LIMIT 10)
+                            (SELECT @s:=@s+1 AS number, name, hotwheel_score AS score, id FROM users_app ,(SELECT @s:= 0) AS s ORDER BY `score` DESC LIMIT 10)
                             UNION
                             (SELECT
                                 (
                                     SELECT COUNT(id) FROM users_app 
-                                    WHERE barbie_score >= (
-                                        SELECT barbie_score FROM users_app WHERE name = ?
+                                    WHERE hotwheel_score >= (
+                                        SELECT hotwheel_score FROM users_app WHERE name = ?
                                     )
 
-                                )AS number, name, barbie_score, id FROM users_app WHERE name = ?)
-                        ) a GROUP BY id ORDER BY score DESC";
-
+                                )AS number, name, hotwheel_score, id FROM users_app WHERE name = ?)
+                        ) a GROUP BY id ORDER BY `number` ASC";
+                //die($sql);
                 $dataLeaderBoard = DB::select(DB::raw($sql), 
                                         array($request->input('username'), $request->input('username'))
                                     );
@@ -366,17 +366,17 @@ class ApiController extends Controller
 
             if(count($dataUser) > 0){
                 $sql = "SELECT number, name, score FROM (
-                            (SELECT @s:=@s+1 AS number, name, hotwheel_score AS score, id FROM users_app ,(SELECT @s:= 0) AS s ORDER BY hotwheel_score DESC LIMIT 10)
+                            (SELECT @s:=@s+1 AS number, name, barbie_score AS score, id FROM users_app ,(SELECT @s:= 0) AS s ORDER BY `score` DESC LIMIT 10)
                             UNION
                             (SELECT
                                 (
                                     SELECT COUNT(id) FROM users_app 
-                                    WHERE hotwheel_score >= (
-                                        SELECT hotwheel_score FROM users_app WHERE name = ?
+                                    WHERE barbie_score >= (
+                                        SELECT barbie_score FROM users_app WHERE name = ?
                                     )
 
-                                )AS number, name, hotwheel_score, id FROM users_app WHERE name = ?)
-                        ) a GROUP BY id ORDER BY score DESC";
+                                )AS number, name, barbie_score, id FROM users_app WHERE name = ?)
+                        ) a GROUP BY id ORDER BY `number` ASC";
 
                 $dataLeaderBoard = DB::select(DB::raw($sql), 
                                         array($request->input('username'), $request->input('username'))
