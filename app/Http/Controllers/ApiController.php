@@ -318,7 +318,7 @@ class ApiController extends Controller
                                     )
 
                                 )AS number, name, barbie_score, id FROM users_app WHERE name = ?)
-                        ) a GROUP BY id ORDER BY number";
+                        ) a GROUP BY id ORDER BY score DESC";
 
                 $dataLeaderBoard = DB::select(DB::raw($sql), 
                                         array($request->input('username'), $request->input('username'))
@@ -376,7 +376,7 @@ class ApiController extends Controller
                                     )
 
                                 )AS number, name, hotwheel_score, id FROM users_app WHERE name = ?)
-                        ) a GROUP BY id ORDER BY number";
+                        ) a GROUP BY id ORDER BY score DESC";
 
                 $dataLeaderBoard = DB::select(DB::raw($sql), 
                                         array($request->input('username'), $request->input('username'))
