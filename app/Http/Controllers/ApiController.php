@@ -258,8 +258,7 @@ class ApiController extends Controller
                 $dataJson["error_messages"][] = "Anda belum berhasil";
                 $dataJson["status"] = "Failed";
                 $dataJson["coupon_number"] = "FALSE";
-            }        
-            
+            }
         }       
         else{
             $dataJson["error_messages"] = $validator->messages();
@@ -326,7 +325,8 @@ class ApiController extends Controller
                                     );
 
                 if(count($dataLeaderBoard) > 0){
-                    $dataJson["leader_board"] = $dataLeaderBoard;
+                    $dataJson["leader_board"]   = $dataLeaderBoard;
+                    $dataJson["total_data"]   = count($dataLeaderBoard);
                 }
                 else{
                     $dataJson["error_messages"] = "Tidak ada data";
@@ -383,7 +383,9 @@ class ApiController extends Controller
                                     );
 
                 if(count($dataLeaderBoard) > 0){
+                    $dataJson["total_data"]   = count($dataLeaderBoard);
                     $dataJson["leader_board"] = $dataLeaderBoard;
+                    
                 }
                 else{
                     $dataJson["error_messages"] = "Tidak ada data";

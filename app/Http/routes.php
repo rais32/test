@@ -11,10 +11,13 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'homeController@index');
 Route::get('/test','ApiController@coba');
+Route::controllers([
+	'auth' => 'Auth\AuthController',
+   	'password' => 'Auth\PasswordController',
+]);
+
 Route::get('/api/get_token','ApiController@getToken');
 Route::post('/api/add_user','ApiController@addUser');
 Route::post('/api/get_leader_board_hotwheel','ApiController@getLeaderBoardHotwheel');
