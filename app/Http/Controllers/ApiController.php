@@ -8,6 +8,7 @@ use Validator;
 use App\Http\Requests;
 use DB;
 use App\UserAppModel;
+use App\couponsModel;
 
 class ApiController extends Controller
 {
@@ -185,7 +186,88 @@ class ApiController extends Controller
         return response()->json($dataJson);
     }
 
-    public function getCouponWinner(){
+    public function getCouponWinner(Request $request){
+        $dataJson["status_code"]     = 200;
+        $dataJson["status"]          = "Success";
+        //
+        $rules = array(
+                        'username' => 'required'
+                    );
+
+        $messages = array('required'  => 'Input :attribute harus diisi');
+        $validator = Validator::make($request->all(), $rules, $messages); 
+        
+        if(!$validator->fails()){  
+
+            $dataMinProb = DB::table('options')
+                            ->where('key','=','min_prob')
+                            ->get();
+            $dataMaxProb = DB::table('options')
+                            ->where('key','=','max_prob')
+                            ->get();
+
+            $dataMaxWinner = DB::table('options')
+                            ->where('key','=','max_winner')
+                            ->get();
+            
+            $rand = rand(1,$dataMaxProb[0]->value);
+
+            $sql = "SELECT winners.id 
+                    FROM winners 
+                    JOIN users_app ON winners.id_user = users_app.id
+                    WHERE 
+                        users_app.name = :username
+                    AND date(winners.created_at) = CURDATE()";
+
+            $dataUser = DB::select(DB::raw($sql), array('username' => $request->input('username')));
+
+            $sql_winner = "SELECT id 
+                    FROM winners 
+                    WHERE
+                        date(winners.created_at) = CURDATE()";
+
+            $dataAllWinner = DB::select(DB::raw($sql_winner));
+            
+            if($rand <= $dataMinProb[0]->value && count($dataUser) < 1 && count($dataAllWinner) < $dataMaxWinner[0]->value){
+
+                $dataCoupon = DB::table('coupons')
+                                ->where('status', '=', '0')
+                                ->take(1)
+                                ->get();
+
+                if(count($dataCoupon) > 0){
+                    $returnValue = couponsModel::insert_winner($request->input('username'),$dataCoupon[0]->id, $dataCoupon[0]->coupon_number);
+
+                    if($returnValue){
+                        $dataJson["coupon_number"] = $returnValue;
+                    }
+                    else{
+                        $dataJson["error_messages"][] = "Database error";
+                        $dataJson["status"] = "Failed";
+                        $dataJson["coupon_number"] = "FALSE";
+                    }
+                }
+                else{
+                    $dataJson["error_messages"][] = "Anda belum berhasil";
+                    $dataJson["status"] = "Failed";
+                    $dataJson["coupon_number"] = "FALSE";
+                }
+
+            }
+            else{
+                $dataJson["error_messages"][] = "Anda belum berhasil";
+                $dataJson["status"] = "Failed";
+                $dataJson["coupon_number"] = "FALSE";
+            }        
+            
+        }       
+        else{
+            $dataJson["error_messages"] = $validator->messages();
+            $dataJson["status"] = "Failed";
+            $dataJson["coupon_number"] = "FALSE";
+        }
+        
+        return response()->json($dataJson);
         
     }
     public function getToken(){
@@ -227,7 +309,7 @@ class ApiController extends Controller
     }
 
     public function coba(){
-        return UserAppModel::coba();
+        return couponsModel::coba();
     }
     private function tryCatch(){
         /*try{

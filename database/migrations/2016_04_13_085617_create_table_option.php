@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateTableCoupons extends Migration
+class CreateTableOption extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,10 @@ class CreateTableCoupons extends Migration
     public function up()
     {
         //
-        Schema::create('coupons', function (Blueprint $table) {
+        Schema::create('options', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('coupon_number')->unique();
-            $table->string('status',2)->default(0);
+            $table->string('key');
+            $table->string('value');
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ class CreateTableCoupons extends Migration
     public function down()
     {
         //
-        Schema::drop('coupons');
+        Schema::drop('options');
     }
 }
