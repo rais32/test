@@ -15,47 +15,47 @@
     <div class="navbar-default sidebar" role="navigation">
         <div class="sidebar-nav navbar-collapse">
             <ul class="nav" id="side-menu">
-                <!--
-                <li class="sidebar-search">
-                    <form role="form" action="{{ url('/search') }}" role="form" method="GET">
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Pencarian..." name="search">
-                            <span class="input-group-btn">
-                            <button class="btn btn-default" type="submit">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </span>
-                        </div>
-                    </form>
-                    
-                </li>
-                -->
-
                 <li>
-                    <a href="{{ url('/') }}">Home</a>
+                    <a href="{{ url('/') }}">
+                        <i class="fa fa-home"></i>
+                        Home
+                    </a>
                 </li>
                 <li>
-                    <a href="#">Data Sekolah<span class="fa arrow"></span></a>
+                    <a href="#">
+                        <i class="fa fa-list" aria-hidden="true"></i>
+                        Coupons
+                        <span class="fa arrow"></span>
+                    </a>
                     <ul class="nav nav-second-level">
                         <li>
-                            <a href="{{ url('data_sekolah/daftar_menu') }}">Menu</a>
+                            <a href="{{ url('data_sekolah/daftar_menu') }}">
+                                <i class="fa fa-star" aria-hidden="true"></i>
+                                List Coupon Winners
+                            </a>
                         </li>
                         <li>
-                            <a href="{{ url('data_sekolah/daftar_kategori') }}">Kategori</a>
-                        </li>
-                        <li>
-                            <a href="{{ url('data_sekolah/daftar_konten') }}">Konten</a>
-                        </li>                        
+                            <a href="{{ url('data_sekolah/daftar_kategori') }}">
+                                <i class="fa fa-upload" aria-hidden="true"></i>
+                                Add More Coupon
+                            </a>
+                        </li>                   
                     </ul>
                     <!-- /.nav-second-level -->
                 </li>
                 <li>
-                    <a href="{{ url('daftar_user') }}">Daftar User</a>
+                    <a href="{{ url('daftar_user') }}">
+                        <i class="fa fa-users" aria-hidden="true"></i>
+                        List User
+                    </a>
                 </li>
                 
                 
                 <li>
-                    <a href="{{ url('/auth/logout') }}">Logout</a>
+                    <a href="{{ url('/auth/logout') }}">
+                        <i class="fa fa-power-off"></i>
+                        Logout
+                    </a>
                 </li>
             </ul>
         </div>
