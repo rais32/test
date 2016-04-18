@@ -1,3 +1,6 @@
 .table_top_ten tr.table_body:hover{
 	background: #dff0d8;
 }
+form#form-coupon span{
+	font-size: 11px;
+}

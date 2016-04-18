@@ -35,7 +35,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url('data_sekolah/daftar_kategori') }}">
+                            <a href="{{ url('add_coupon') }}">
                                 <i class="fa fa-upload" aria-hidden="true"></i>
                                 Add More Coupon
                             </a>

@@ -18,6 +18,11 @@ Route::controllers([
    	'password' => 'Auth\PasswordController',
 ]);
 
+Route::group(['middleware' => 'auth'],function(){
+	Route::post('upload_coupon', 'homeController@uploadCoupon');
+	Route::get('add_coupon','homeController@showAddCoupon');
+});
+
 Route::get('/api/get_token','ApiController@getToken');
 Route::post('/api/add_user','ApiController@addUser');
 Route::post('/api/get_leader_board_hotwheel','ApiController@getLeaderBoardHotwheel');

@@ -228,7 +228,7 @@ class ApiController extends Controller
 
             $dataAllWinner = DB::select(DB::raw($sql_winner));
             
-            if($rand <= $dataMinProb[0]->value && count($dataUser) < 1 && count($dataAllWinner) < $dataMaxWinner[0]->value){
+            if($rand <= $dataMinProb[0]->value && count($dataUser) < 1 && count($dataAllWinner) <= $dataMaxWinner[0]->value){
 
                 $dataCoupon = DB::table('coupons')
                                 ->where('status', '=', '0')

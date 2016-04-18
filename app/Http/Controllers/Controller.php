@@ -11,5 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesResources;
 class Controller extends BaseController
 {
 	protected $data;
+	protected $path_files = "/files";
+	
 	use AuthorizesRequests, AuthorizesResources, DispatchesJobs, ValidatesRequests;
 }

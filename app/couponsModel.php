@@ -36,7 +36,17 @@ class couponsModel extends Model
 		    return false;
 		}
     }
-    public static function coba(){
-    	return "sadf";
+    public static function insert_coupon($dataInsertArray){
+    	DB::beginTransaction();
+
+        try {
+            DB::table('coupons')->insert($dataInsertArray);
+            
+            DB::commit();
+            return "Success";
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $e->getMessage();
+        }
     }
 }
