@@ -12,7 +12,7 @@
 */
 
 Route::get('/', 'homeController@index');
-Route::get('/test','ApiController@coba');
+//Route::get('/test','ApiController@coba');
 Route::controllers([
 	'auth' => 'Auth\AuthController',
    	'password' => 'Auth\PasswordController',
@@ -21,6 +21,12 @@ Route::controllers([
 Route::group(['middleware' => 'auth'],function(){
 	Route::post('upload_coupon', 'homeController@uploadCoupon');
 	Route::get('add_coupon','homeController@showAddCoupon');
+	Route::get('list_coupons','homeController@showListCoupon');
+	Route::get('list_winners','homeController@showWinner');
+	Route::get('options','homeController@showOptions');
+	Route::post('update_total_winners','homeController@updateTotalWinners');
+	Route::post('update_probability','homeController@updateProbability');
+	
 });
 
 Route::get('/api/get_token','ApiController@getToken');

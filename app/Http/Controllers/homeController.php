@@ -9,6 +9,7 @@ use Auth;
 use DB;
 use App\UserAppModel;
 use App\couponsModel;
+use App\OptionsModel;
 use Validator;
 use PHPExcel; 
 use PHPExcel_IOFactory;
@@ -42,7 +43,22 @@ class homeController extends Controller
         $this->data["title"] = "Dashboard";
         return view('pages.add_more_coupon', $this->data);
     }
+    public function showListCoupon(Request $request){
+        $dataWinners  = DB::table('coupons')
+                      ->select('coupons.coupon_number', 'coupons.created_at', 'coupons.status')
+                      ->orderBy('coupons.created_at', 'desc');
+        
+        $this->data['page'] = 'list_coupons';
 
+        if($request->input('search')){
+            $this->data['queryString']['search'] = $request->input('search');
+            $dataWinners->where('coupons.coupon_number', 'like', '%'.$request->input('search').'%');
+        }
+
+        $this->data['dataCoupons'] = $dataWinners->paginate(20);
+        $this->data['dataCoupons']->setPath('list_coupons');
+        return view('pages.list_coupons', $this->data);
+    }
     public function uploadCoupon(Request $request){
         if($request->ajax()){
 
@@ -87,12 +103,16 @@ class homeController extends Controller
                     $highestColumn = $sheet->getHighestColumn();
 
                     for ($row = 2; $row <= $highestRow; $row++){ 
-                        $rowData[]["coupon_number"] = $sheet->getCellByColumnAndRow(1 ,$row)->getValue();
+                        $rowData[] = array("coupon_number" => $sheet->getCellByColumnAndRow(1 ,$row)->getValue(),
+                                            "created_at" => DB::raw("NOW()"),
+                                            "updated_at" => DB::raw("NOW()")
+                                            );
+
                     }
                     $dataReturn = couponsModel::insert_coupon($rowData);     
 
                     if($dataReturn != "Success"){
-                        $dataJson["error_messages"][] = "Duplikasi nomor coupon";
+                        $dataJson["error_messages"][] = $dataReturn;
                         $dataJson["t"] = 0;
                     }
                 }
@@ -112,6 +132,115 @@ class homeController extends Controller
             exit("Access Forbidden");
         }
         
+    }
+
+    public function showWinner(Request $request){
+        $dataWinners  = DB::table('users_app')
+                      ->join('winners', 'users_app.id', '=', 'winners.id_user')
+                      ->join('coupons', 'coupons.id', '=', 'winners.id_coupon')
+                      ->select('users_app.name', 'coupons.coupon_number', 'winners.created_at')
+                      ->orderBy('winners.created_at', 'desc');
+        
+        $this->data['page'] = 'list_winners';
+
+        if($request->input('search')){
+            $this->data['queryString']['search'] = $request->input('search');
+            $dataWinners->where('users_app.name', 'like', '%'.$request->input('search').'%');
+        }
+
+        $this->data['dataWinners'] = $dataWinners->paginate(20);
+        $this->data['dataWinners']->setPath('list_winners');
+        return view('pages.list_winners', $this->data);
+    }
+
+    public function showOptions(){
+        $this->data["title"]        = "Dashboard";
+
+        $this->data["probMinOptions"]   = DB::table('options')
+                                        ->where('key','=','min_prob')
+                                        ->get();
+        $this->data["probMaxOptions"]   = DB::table('options')
+                                        ->where('key','=','max_prob')
+                                        ->get();
+        $this->data["maxWinnerOptions"]   = DB::table('options')
+                                        ->where('key','=','max_winner')
+                                        ->get();
+        return view('pages.options_form', $this->data);
+    }
+
+    public function updateTotalWinners(Request $request){
+        if($request->ajax()){
+            $dataJson['t'] = 1;
+            $rules = array(
+                            'max_winner' => 'required|min:0|numeric'
+                        );            
+            $messages = array(
+                'required'  => 'Input :attribute harus diisi',
+                'min'       => 'Input :attribute minimal 0',
+                'numeric'   => 'Input :attribute harus berupa angka',
+            );
+
+            $validator = Validator::make($request->all(), $rules, $messages); 
+            
+            if(!$validator->fails()){  
+                $dataUpdates = array(
+                                 "value" => $request->input('max_winner'),
+                                 "updated_at" => DB::raw("NOW()")
+                                );
+                DB::table('options')
+                    ->where('key', '=','max_winner')
+                    ->update($dataUpdates);
+                
+            }
+            else{
+                $dataJson["error_messages"] = $validator->messages();
+                $dataJson["t"] = 0;
+            }
+            return response()->json($dataJson);
+        }
+        else{
+            exit("Access Forbidden");
+        }
+    }
+    public function updateProbability(Request $request){
+        if($request->ajax()){
+            //die("asd");
+            $dataJson['t'] = 1;
+            $rules = array(
+                            'min_prob' => 'required|min:0|numeric',
+                            'max_prob' => 'required|min:0|numeric'
+                        );            
+            $messages = array(
+                'required'  => 'Input :attribute harus diisi',
+                'min'       => 'Input :attribute minimal 0',
+                'numeric'   => 'Input :attribute harus berupa angka',
+            );
+
+            $validator = Validator::make($request->all(), $rules, $messages); 
+            
+            if(!$validator->fails()){  
+                $dataUpdates[] = array(
+                                 "value"        => $request->input('max_prob'),
+                                 "key"          => "max_prob",
+                                 "updated_at"   => DB::raw("NOW()")
+                                );
+                $dataUpdates[] = array(
+                                 "value"        => $request->input('min_prob'),
+                                 "key"          => "min_prob",
+                                 "updated_at"   => DB::raw("NOW()")
+                                );
+
+                OptionsModel::update_options($dataUpdates);
+            }
+            else{
+                $dataJson["error_messages"] = $validator->messages();
+                $dataJson["t"] = 0;
+            }
+            return response()->json($dataJson);
+        }
+        else{
+            exit("Access Forbidden");
+        }
     }
 
     public function test(){

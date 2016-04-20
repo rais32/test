@@ -24,7 +24,7 @@
                 </div>
                 <div class="alert alert-success" style="display:none;">
         
-                    <strong>Coupon</strong>
+                    <strong>Kupon berhasil di tambahkan</strong>
                 
                 </div>
                 <form id="form-coupon">
@@ -35,7 +35,8 @@
                         <!--<span class="text-danger">Maximal total data 300</span>-->
                         <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>" />
                     </div>
-                <button type="submit" class="btn btn-primary">Post</button>
+                    <button type="submit" class="btn btn-primary">Post</button> 
+                    <span class="loading" style="display:none;">Loading...</span>
                 </form>
                 <!-- /.table-responsive -->
             </div>
@@ -52,41 +53,55 @@
     @parent
     <script>
         $(document).ready(function(){
+            var btnPress = 1;
             $("#form-coupon").submit(function(){
-                var formData = new FormData($("#form-coupon")[0]);
+                if(btnPress){
+                    $('.btn-primary').prop('disabled', true);
+                    $(".loading").show();
+                    btnPress = 0;
 
-                $("div.form-group").removeClass("has-error");
-                $(".alert-danger").hide();    
-                $(".alert-success").hide();
+                    var formData = new FormData($("#form-coupon")[0]);
 
-                $.ajax({
-                    type: "POST",
-                    url: "<?php echo url('upload_coupon'); ?>",
-                    data: formData,
-                    dataType : "JSON",
-                    processData: false,
-                    contentType: false,
-                    success : function(data){
-                        $(".alert-danger ul").html("");
-                        window.scrollTo(0, 0);
+                    $("div.form-group").removeClass("has-error");
+                    $(".alert-danger").hide();    
+                    $(".alert-success").hide();
 
-                        if(data.t == 1){
-                            alert("success");
-                        }   
-                        else if(data.t == 0){
-                            $(".alert-danger").show();
-                            var htmlLi;
+                    $.ajax({
+                        type: "POST",
+                        url: "<?php echo url('upload_coupon'); ?>",
+                        data: formData,
+                        dataType : "JSON",
+                        processData: false,
+                        contentType: false,
+                        success : function(data){
+                            $('.btn-primary').prop('disabled', false);
+                            $(".loading").hide();
+                            btnPress = 1;
 
-                            for(var index in data.errors) { 
-                                htmlLi = "<li>" + data.errors[index] + "</li>";
-                                $(".alert-danger ul").append(htmlLi); 
-                            }
-                            $( data.indexOfElement ).each(function(index, element) {
-                                $("div.form-group").eq(element).addClass("has-error");   
-                            });
-                        }     
-                    }
-                });
+                            $(".alert-danger ul").html("");
+
+                            if(data.t == 1){
+                                $( ".alert-success" ).show().fadeOut( 5000,function(){
+                                    window.location = "<?php echo url('list_coupons'); ?>";
+                                });
+                            }   
+                            else if(data.t == 0){
+                                $(".alert-danger").show();
+                                var htmlLi;
+
+                                for(var index in data.error_messages) { 
+                                    htmlLi = "<li>" + data.error_messages[index] + "</li>";
+                                    $(".alert-danger ul").append(htmlLi); 
+                                }
+                                $( data.indexOfElement ).each(function(index, element) {
+                                    $("div.form-group").eq(element).addClass("has-error");   
+                                });
+
+                            }     
+                        }
+                    });
+                }
+                
                 return false;
             });
         });
