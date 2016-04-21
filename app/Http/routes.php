@@ -23,9 +23,13 @@ Route::group(['middleware' => 'auth'],function(){
 	Route::get('add_coupon','homeController@showAddCoupon');
 	Route::get('list_coupons','homeController@showListCoupon');
 	Route::get('list_winners','homeController@showWinner');
+	Route::get('list_users','homeController@showUsers');
 	Route::get('options','homeController@showOptions');
+	Route::get('send_to_all','homeController@showSendFormAll');
 	Route::post('update_total_winners','homeController@updateTotalWinners');
 	Route::post('update_probability','homeController@updateProbability');
+	Route::post('post_send_all','homeController@postSendAll');
+	
 	
 });
 

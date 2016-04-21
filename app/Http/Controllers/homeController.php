@@ -44,7 +44,7 @@ class homeController extends Controller
         return view('pages.add_more_coupon', $this->data);
     }
     public function showListCoupon(Request $request){
-        $dataWinners  = DB::table('coupons')
+        $dataCoupons  = DB::table('coupons')
                       ->select('coupons.coupon_number', 'coupons.created_at', 'coupons.status')
                       ->orderBy('coupons.created_at', 'desc');
         
@@ -52,10 +52,10 @@ class homeController extends Controller
 
         if($request->input('search')){
             $this->data['queryString']['search'] = $request->input('search');
-            $dataWinners->where('coupons.coupon_number', 'like', '%'.$request->input('search').'%');
+            $dataCoupons->where('coupons.coupon_number', 'like', '%'.$request->input('search').'%');
         }
 
-        $this->data['dataCoupons'] = $dataWinners->paginate(20);
+        $this->data['dataCoupons'] = $dataCoupons->paginate(20);
         $this->data['dataCoupons']->setPath('list_coupons');
         return view('pages.list_coupons', $this->data);
     }
@@ -132,6 +132,63 @@ class homeController extends Controller
             exit("Access Forbidden");
         }
         
+    }
+
+    public function showSendFormAll(){
+        $this->data["title"] = "Dashboard";
+        return view('pages.send_to_all', $this->data);    
+    }
+
+    public function postSendAll(){
+        if($request->ajax()){
+            $dataJson['t'] = 1;
+            $rules = array(
+                            'message' => 'required|max:100'
+                        );            
+            $messages = array(
+                'required'  => 'Input :attribute harus diisi',
+                'max'       => 'Input :attribute maximal 100 karakter'
+            );
+
+            $validator = Validator::make($request->all(), $rules, $messages); 
+            
+            if(!$validator->fails()){  
+                $dataUpdates = array(
+                                 "value" => $request->input('max_winner'),
+                                 "updated_at" => DB::raw("NOW()")
+                                );
+                DB::table('options')
+                    ->where('key', '=','max_winner')
+                    ->update($dataUpdates);
+                
+            }
+            else{
+                $dataJson["error_messages"] = $validator->messages();
+                $dataJson["t"] = 0;
+            }
+            return response()->json($dataJson);
+        }
+        else{
+            exit("Access Forbidden");
+        }
+    }
+
+    public function showUsers(Request $request){
+        $dataUsers  = DB::table('users_app')
+                      ->select('users_app.name','users_app.phone_number', 'users_app.created_at')
+                      ->orderBy('users_app.created_at', 'desc');
+        
+        $this->data['page'] = 'list_users';
+
+        if($request->input('search')){
+            $this->data['queryString']['search'] = $request->input('search');
+            $dataUsers->where('users_app.name', 'LIKE', '%'.$request->input('search').'%')
+                        ->orWhere('users_app.phone_number', 'LIKE', '%'.$request->input('search').'%');
+        }
+
+        $this->data['dataUsers'] = $dataUsers->paginate(20);
+        $this->data['dataUsers']->setPath('list_users');
+        return view('pages.list_users', $this->data);
     }
 
     public function showWinner(Request $request){

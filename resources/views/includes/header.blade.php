@@ -56,10 +56,26 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url('daftar_user') }}">
-                        <i class="fa fa-users" aria-hidden="true"></i>&nbsp;
-                        List User
+                    <a href="#">
+                        <i class="fa fa-user" aria-hidden="true"></i>&nbsp;
+                        Users
+                        <span class="fa arrow"></span>
                     </a>
+                    <ul class="nav nav-second-level">
+                        <li>
+                            <a href="{{ url('list_users') }}">
+                                <i class="fa fa-users" aria-hidden="true"></i>&nbsp;
+                                List User
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url('send_to_all') }}">
+                                <i class="fa fa-envelope" aria-hidden="true"></i>&nbsp;
+                                Send To All Users
+                            </a>
+                        </li>
+                    </ul>
+                    
                 </li>
                 
                 
