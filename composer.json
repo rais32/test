@@ -8,7 +8,7 @@
         "php": ">=5.5.9",
         "laravel/framework": "5.2.*",
         "phpoffice/phpexcel": "dev-master",
-        "ixudra/curl": "6.*"
+        "anlutro/curl": "^1.4"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

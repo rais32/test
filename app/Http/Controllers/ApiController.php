@@ -45,7 +45,19 @@ class ApiController extends Controller
                 DB::table('users_app')->insert($dataAdd);
             }       
             else{
-                $dataJson["error_messages"] = $validator->messages();
+                $messageError = json_decode($validator->messages(), true);
+                //die(var_dump($messageError["username"][0]));
+
+                if(isset($messageError["username"][0]) && isset($messageError["id_phone"][0])){
+                    $dataJson["error_messages"][] = "Tolong masukkan nama dan id_phone";
+                }
+                else if(isset($messageError["id_phone"][0])){
+                    $dataJson["error_messages"][] = "Tolong masukkan id_phone";
+                }
+                else{
+                    $dataJson["error_messages"][] = "Tolong masukkan username";
+                }
+                
                 $dataJson["status"] = "Failed";
             }   
         } 

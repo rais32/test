@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col-lg-12">
-        <h1 class="page-header">Send Message To All</h1>
+        <h1 class="page-header">Send Message To {{$dataUser[0]->name}}</h1>
     </div>
     <!-- /.col-lg-12 -->
 </div>
@@ -32,6 +32,7 @@
                         <input type="text" name="message" placeholder="Message" style="width:250px;"><br/>
                         <span class="text-danger">Maximal 100 karakter</span><br/>
                         <!--<span class="text-danger">Maximal total data 300</span>-->
+                        <input type="hidden" name="id" value="{{$dataUser[0]->id}}" />
                         <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>" />
                     </div>
                     <button type="submit" class="btn btn-primary">Post</button> 
@@ -67,7 +68,7 @@
 
                     $.ajax({
                         type: "POST",
-                        url: "<?php echo url('post_send_all'); ?>",
+                        url: "<?php echo url('post_send_user'); ?>",
                         data: formData,
                         dataType : "JSON",
                         processData: false,

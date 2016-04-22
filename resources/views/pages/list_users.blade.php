@@ -37,8 +37,9 @@
                             <tr>
                                 <th>#</th>
                                 <th>Userame</th>
-                                <th>Coupon Number</th>
+                                <th>Phone Number</th>
                                 <th>Date</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,6 +52,11 @@
                                     <td>{{$dataUser->name}}</td>
                                     <td>{{$dataUser->phone_number}}</td>
                                     <td>{{date("h:i j-M-Y", strtotime($dataUser->created_at))}}</td>
+                                    <td>
+                                        <a href="{{url('send_to_user').'/'. $dataUser->id}}" class="btn btn-info">
+                                            Send
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php
                                 

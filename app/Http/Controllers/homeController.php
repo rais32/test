@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use cURL;
 use App\Http\Requests;
 use Auth;
 use DB;
@@ -139,7 +140,8 @@ class homeController extends Controller
         return view('pages.send_to_all', $this->data);    
     }
 
-    public function postSendAll(){
+    public function postSendAll(Request $request){
+        
         if($request->ajax()){
             $dataJson['t'] = 1;
             $rules = array(
@@ -153,14 +155,133 @@ class homeController extends Controller
             $validator = Validator::make($request->all(), $rules, $messages); 
             
             if(!$validator->fails()){  
-                $dataUpdates = array(
-                                 "value" => $request->input('max_winner'),
-                                 "updated_at" => DB::raw("NOW()")
-                                );
-                DB::table('options')
-                    ->where('key', '=','max_winner')
-                    ->update($dataUpdates);
+                $curl = curl_init();
+
+                $dataUsers = DB::table('users_app')
+                                ->select('id_phone')
+                                ->get();
+
+                for($x=0; $x<count($dataUsers); $x++){
+                    $dataUsersSend[$x] = $dataUsers[$x]->id_phone; 
+                }
+                $dataJsonSend = array(
+                    "registration_ids" => $dataUsersSend,
+                    "data" => array(
+                                    "title" => "Alpenliebe",
+                                    "text" => $request->input('message')
+                                )
+                );
                 
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => "https://gcm-http.googleapis.com/gcm/send",
+                  CURLOPT_SSL_VERIFYPEER=> FALSE,
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => "",
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => "POST",
+                  CURLOPT_POSTFIELDS => json_encode($dataJsonSend),
+                  CURLOPT_HTTPHEADER => array(
+                    "authorization: key=AIzaSyA3IQIokKmUN4fyru3HK9pRNss7F6OL1Lc",
+                    "cache-control: no-cache",
+                    "content-type: application/json"
+                  ),
+                ));
+
+                $response = curl_exec($curl);
+                $err = curl_error($curl);
+
+                curl_close($curl);
+
+                if ($err) {
+                  $dataJson["error_messages"] = $err;
+                } else {
+                    $dataResponse = json_decode($response);
+                    if($dataResponse->success < count($dataUsers)){
+                        $dataJson["error_messages"][] = $dataResponse;
+                        $dataJson["t"] = 0;
+                    }
+                }
+            }
+            else{
+                $dataJson["error_messages"] = $validator->messages();
+                $dataJson["t"] = 0;
+            }
+            return response()->json($dataJson);
+        }
+        else{
+            exit("Access Forbidden");
+        }
+    }
+
+    public function postSendUser(Request $request){
+        
+        if($request->ajax()){
+            $dataJson['t'] = 1;
+            $rules = array(
+                            'message' => 'required|max:100',
+                            'id'      => 'required'
+                        );            
+            $messages = array(
+                'required'  => 'Input :attribute harus diisi',
+                'max'       => 'Input :attribute maximal 100 karakter'
+            );
+
+            $validator = Validator::make($request->all(), $rules, $messages); 
+            
+            if(!$validator->fails()){ 
+
+                $dataUser  = DB::table('users_app')
+                              ->where('id','=', $request->input('id'))
+                              ->get();
+
+                if(count($dataUser) > 0){
+                    $dataUsersSend[0] = $dataUser[0]->id_phone;
+                    $curl = curl_init();
+
+                    
+                    $dataJsonSend = array(
+                        "registration_ids" => $dataUsersSend,
+                        "data" => array(
+                                        "title" => "Alpenliebe",
+                                        "text" => $request->input('message')
+                                    )
+                    );
+                    
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => "https://gcm-http.googleapis.com/gcm/send",
+                      CURLOPT_SSL_VERIFYPEER=> FALSE,
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => "",
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 30,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => "POST",
+                      CURLOPT_POSTFIELDS => json_encode($dataJsonSend),
+                      CURLOPT_HTTPHEADER => array(
+                        "authorization: key=AIzaSyA3IQIokKmUN4fyru3HK9pRNss7F6OL1Lc",
+                        "cache-control: no-cache",
+                        "content-type: application/json"
+                      ),
+                    ));
+
+                    $response = curl_exec($curl);
+                    $err = curl_error($curl);
+
+                    curl_close($curl);
+
+                    if ($err) {
+                        $dataJson["error_messages"] = $err;
+                    }   
+                    else {
+                        $dataResponse = json_decode($response);
+                        if($dataResponse->success != '1'){
+                            $dataJson["error_messages"][] = $dataResponse->results[0]->error;
+                            $dataJson["t"] = 0;
+                        }
+                    }
+                }
             }
             else{
                 $dataJson["error_messages"] = $validator->messages();
@@ -175,7 +296,7 @@ class homeController extends Controller
 
     public function showUsers(Request $request){
         $dataUsers  = DB::table('users_app')
-                      ->select('users_app.name','users_app.phone_number', 'users_app.created_at')
+                      ->select('users_app.id', 'users_app.name','users_app.phone_number', 'users_app.created_at')
                       ->orderBy('users_app.created_at', 'desc');
         
         $this->data['page'] = 'list_users';
@@ -189,6 +310,24 @@ class homeController extends Controller
         $this->data['dataUsers'] = $dataUsers->paginate(20);
         $this->data['dataUsers']->setPath('list_users');
         return view('pages.list_users', $this->data);
+    }
+
+    public function showSendFormNotif($id){
+        $this->data["title"]    = "Dashboard";        
+        $this->data["id"]       = $id;
+
+        $dataUser  = DB::table('users_app')
+                      ->where('id','=', $id)
+                      ->get();
+
+        if(count($dataUser) > 0){
+            $this->data["dataUser"] = $dataUser;
+            return view('pages.send_to_user', $this->data);
+        }
+        else{
+            return redirect()->route('');
+        }
+        
     }
 
     public function showWinner(Request $request){
