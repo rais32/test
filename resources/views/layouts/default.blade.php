@@ -23,14 +23,12 @@
 </head>
 <body id="page-top">
 <div id="wrapper">
-@if (Auth::check())
-    @include('includes.header')
+
+    
     <div id="page-wrapper" style="min-height:800px">
         @yield('content')
     </div>
-@else
-    @yield('content')
-@endif
+
 <!-- /#page-wrapper --> 
 @include('includes.footer')
 </div>

@@ -13,6 +13,8 @@ use App\couponsModel;
 class ApiController extends Controller
 {
     
+
+
     public function addUser(Request $request){
         
         $dataJson["status_code"]     = 200;
@@ -38,8 +40,8 @@ class ApiController extends Controller
                 $dataAdd = array(
                                 "name" => $request->input('username'),
                                 "id_phone" => $request->input('id_phone'),
-                                "updated_at" => date('Y-m-d G:i:s'),
-                                "created_at" => date('Y-m-d G:i:s')
+                                "updated_at" => DB::raw("NOW()"),
+                                "created_at" => DB::raw("NOW()")
                             );
               
                 DB::table('users_app')->insert($dataAdd);
@@ -75,8 +77,9 @@ class ApiController extends Controller
         $dataJson["status"]          = "Success";
         
         $rules = array(
-                        'username' => 'required',
-                        'phone_number' => 'required|numeric'
+                        'username'      => 'required',
+                        'phone_number'  => 'required|numeric',
+                        'type'          => 'required'
                     );
 
         $messages = [
@@ -90,12 +93,92 @@ class ApiController extends Controller
             if(count($dataUser)  > 0 ){
                 $dataUpdate = array(
                                 "phone_number" => $request->input('phone_number'),
-                                "updated_at" => date('Y-m-d G:i:s')
+                                "updated_at" => DB::raw("NOW()")
                             );
-              
-                DB::table('users_app')
-                ->where('name', $request->input('username'))
-                ->update($dataUpdate);
+                try{
+                    DB::table('users_app')
+                    ->where('name', $request->input('username'))
+                    ->update($dataUpdate);
+                }
+                catch(\Exception $e){
+                    $dataJson["error_messages"][]   = $e->getMessage();
+                    $dataJson["status"]             = "Failed";
+                }
+
+                if($dataJson["status"] != "Failed"){
+                    $dataUserKey = DB::table('options')
+                                    ->where('key','=','sms_userkey')
+                                    ->get();
+                    $dataPassKey = DB::table('options')
+                                    ->where('key','=','sms_passkey')
+                                    ->get();
+
+                    $dataCoupon = DB::table('winners')
+                                    ->join('coupons', 'winners.id_coupon', '=', 'coupons.id')
+                                    ->join('users_app', 'users_app.id', '=', 'winners.id_user')
+                                    ->where('users_app.name','=',$request->input('username'))
+                                    ->where(DB::raw("date(winners.created_at)"),'=',DB::raw("date(NOW())"))
+                                    ->where('type','=', $request->input('type'))
+                                    ->select('coupons.coupon_number')
+                                    ->get();
+
+                    $pesanSms = "";
+
+                    if($request->input('type') == '1'){
+                        //$pesanSms = "Selamat anda menang \nini no kupon Anda : ". $dataCoupon[0]->coupon_number . "barbie";    
+                        $pesanSms = "Selamat!\nMini Barbie gratis buat kamu! Tebus di Alfamart tertentu dengan\npembelian 10 pcs Alpenliebe Lollipop dan tunjukkan kode promo: ". $dataCoupon[0]->coupon_number . ". Info: 021-7822867";
+                    }
+                    else{
+                        //$pesanSms = "Selamat anda menang \nini no kupon Anda : ". $dataCoupon[0]->coupon_number . "hotwheel";       
+                        $pesanSms = "Selamat!\nHot Wheels gratis buat kamu! Tebus di Alfamart tertentu dengan\npembelian 10 pcs Alpenliebe Lollipop dan tunjukkan kode promo: ". $dataCoupon[0]->coupon_number . ". Info: 021-7822867";
+                    }
+                    
+                    
+                    
+                    if(count($dataCoupon) > 0){
+                        $dataArraySend = "userkey=".$dataUserKey[0]->value."&passkey=".$dataPassKey[0]->value."&nohp=".$request->input('phone_number')."&pesan=". $pesanSms;
+                    
+                        $curl = curl_init();
+
+                        curl_setopt_array($curl, array(
+                            CURLOPT_URL => "https://alpha.zenziva.net/apps/smsapi.php",
+                            CURLOPT_SSL_VERIFYPEER=> FALSE,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_ENCODING => "",
+                            CURLOPT_MAXREDIRS => 10,
+                            CURLOPT_TIMEOUT => 30,
+                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                            CURLOPT_CUSTOMREQUEST => "POST",
+                            CURLOPT_POSTFIELDS => $dataArraySend,
+                            CURLOPT_HTTPHEADER => array(
+                                                    "cache-control: no-cache"
+                                                    )
+                        ));
+
+                        $response = curl_exec($curl);
+                        $err = curl_error($curl);
+
+                        $xmlResponse=simplexml_load_string($response);
+                        
+                        
+                        if ($err) {
+                            $dataJson["error_messages"] = $err;
+                            $dataJson["status"] = "Failed";
+                            $dataJson["coupon_number"] = "FALSE";
+                        }
+                        else if($xmlResponse->message->text != "Success"){
+                            $dataJson["error_messages"] = $xmlResponse->message->text;
+                            $dataJson["status"] = "Failed";
+                            $dataJson["coupon_number"] = "FALSE";
+                        }
+                    }
+                    else{
+                        $dataJson["error_messages"][] = "Tidak terdapat no kupon";
+                        $dataJson["status"] = "Failed";    
+                    }
+
+                }
+
             }
             else{
                 $dataJson["error_messages"][] = "Username tidak terdaftar";
@@ -129,16 +212,6 @@ class ApiController extends Controller
         if(!$validator->fails()){  
             $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
             if(count($dataUser)  > 0 ){
-                /*
-                $dataUpdate = array(
-                                "barbie_score" => $request->input('score'),
-                                "updated_at" => date('Y-m-d G:i:s')
-                            );
-              
-                DB::table('users_app')
-                ->where('name', $request->input('username'))
-                ->update($dataUpdate);
-                */
 
                 UserAppModel::update_score_barbie($request->input('username'), $request->input('score'));
                 
@@ -175,14 +248,6 @@ class ApiController extends Controller
         if(!$validator->fails()){  
             $dataUser = DB::table('users_app')->where('name', '=', $request->input('username'))->get();
             if(count($dataUser)  > 0 ){
-                /*$dataUpdate = array(
-                                "hotwheel_score" => $request->input('score'),
-                                "updated_at" => date('Y-m-d G:i:s')
-                            );
-              
-                DB::table('users_app')
-                ->where('name', $request->input('username'))
-                ->update($dataUpdate);*/
                 UserAppModel::update_score_hotwheel($request->input('username'), $request->input('score'));
             }
             else{
@@ -203,7 +268,8 @@ class ApiController extends Controller
         $dataJson["status"]          = "Success";
         //
         $rules = array(
-                        'username' => 'required'
+                        'username' => 'required',
+                        'type' => 'required'
                     );
 
         $messages = array('required'  => 'Input :attribute harus diisi');
@@ -238,12 +304,24 @@ class ApiController extends Controller
                     WHERE
                         date(winners.created_at) = CURDATE()";
 
-            $dataAllWinner = DB::select(DB::raw($sql_winner));
+            $dataAllWinner  = DB::select(DB::raw($sql_winner));
+            $dataUserSend   = DB::table('users_app')
+                              ->where('name','=',$request->input('username'))
+                              ->get();
             
-            if($rand <= $dataMinProb[0]->value && count($dataUser) < 1 && count($dataAllWinner) <= $dataMaxWinner[0]->value){
+            //die(count($dataAllWinner) . " " . $dataMaxWinner[0]->value);
 
+            /*if(count($dataUserSend) > 0 && $rand <= $dataMinProb[0]->value && count($dataUser) < 1 && count($dataAllWinner) < $dataMaxWinner[0]->value){
+                die("a");
+            }
+            else{
+                die("b");
+            }*/
+            if(count($dataUserSend) > 0 && $rand <= $dataMinProb[0]->value && count($dataUser) < 1 && count($dataAllWinner) < intval($dataMaxWinner[0]->value)){
+                
                 $dataCoupon = DB::table('coupons')
                                 ->where('status', '=', '0')
+                                ->where('type', '=', $request->input('type'))
                                 ->take(1)
                                 ->get();
 
@@ -260,8 +338,8 @@ class ApiController extends Controller
                     }
                 }
                 else{
-                    $dataJson["error_messages"][] = "Anda belum berhasil";
-                    $dataJson["status"] = "Failed";
+                    $dataJson["error_messages"][] = "Kupon tidak tersedia";
+                    $tersi["status"] = "Failed";
                     $dataJson["coupon_number"] = "FALSE";
                 }
 

@@ -8,7 +8,7 @@ use DB;
 class UserAppModel extends Model
 {
     //
-    protected $table = 'users_app';
+    protected $table = 'users';
     //protected $timestamps = true;
 
     public static function update_score_barbie($username, $score){
